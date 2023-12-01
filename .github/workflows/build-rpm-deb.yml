@@ -1,0 +1,52 @@
+name: Build packages
+
+on:
+  push:
+    branches: 
+      - main
+    
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+    
+      - name: Set up build environment
+        run: |
+          sudo apt-get update
+          sudo apt-get install rpm 
+          sudo apt-get install wget -y
+          
+      - name: Build RPM package
+        run: |
+          mkdir -p ~/rpmbuild/{BUILD,BUILDROOT,RPMS,SOURCES,SPECS,SRPMS}
+          cd ~/rpmbuild/BUILD
+          wget https://raw.githubusercontent.com/SofiaGlushak/lab_tasks/main/count_files.sh
+          cd ../../
+          cd ~/rpmbuild/SPECS
+          wget https://raw.githubusercontent.com/SofiaGlushak/lab_tasks/main/rpm/count_files.spec
+          cd ../../
+          rpmbuild -ba ~/rpmbuild/SPECS/count_files.spec
+
+      - name: Build Debian package
+        run: |
+          mkdir -p ~/count_files_deb/DEBIAN
+          mkdir -p ~/count_files_deb/usr/bin
+          cd ~/count_files_deb/usr/bin
+          wget https://raw.githubusercontent.com/SofiaGlushak/lab_tasks/main/count_files.sh
+          cd ../../../
+          cd ~/count_files_deb/DEBIAN
+          wget https://raw.githubusercontent.com/SofiaGlushak/lab_tasks/main/debian/control
+          cd ../../
+          dpkg-deb --build count_files_deb
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: build-artifacts
+          path: |
+            ~/rpmbuild/RPNS/**/*.rpm
+            ~/rpmbuild/SRPMS/*.src.rpm
+            ~/count_files_deb.deb
