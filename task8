@@ -1,0 +1,30 @@
+pipeline {
+    agent {
+        docker {
+            image 'ubuntu'
+            args '-u root:sudo'
+        }
+    }
+    stages {
+        stage("setup_env") {
+            steps {
+                sh 'apt-get update -y'
+                sh 'apt-get install -y wget'
+            }
+        }
+        stage("install deb") {
+            steps {
+                sh 'wget https://raw.githubusercontent.com/SofiaGlushak/lab_tasks/main/count_files_deb.deb'
+                sh 'dpkg --extract count_files_deb.deb .'
+            }
+        }
+        stage("exrcute script") {
+            steps {
+                sh 'cd usr/bin'
+                sh 'cp count_files.sh /var/jenkins_home/workspace/test/count_files.sh'
+                sh 'chmod +x count_files.sh'
+                sh '/var/jenkins_home/workspace/test/count_files.sh /etc'
+            }
+        }
+    }
+}
